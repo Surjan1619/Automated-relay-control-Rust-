@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relay Control</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f4f4f9; }
+        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        button { font-size: 1.2rem; padding: 15px 30px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s; color: white; }
+        .on { background-color: #2ecc71; }
+        .off { background-color: #e74c3c; }
+        button:active { opacity: 0.7; }
+        #status { margin-top: 20px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Управление реле</h1>
+    <button class="on" onclick="sendSignal('ON')">ВКЛЮЧИТЬ</button>
+    <button class="off" onclick="sendSignal('OFF')">ВЫКЛЮЧИТЬ</button>
+    <div id="status">Ожидание команды...</div>
+</div>
+
+
+
+<script>
+    const SERVER_IP = 'http://172.31.28.185:3000';
+
+    async function sendSignal(command) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = `Отправка: ${command}...`;
+
+        try {
+            const response = await fetch(`${SERVER_IP}/get-state`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: command })
+            });
+
+            if (response.ok) {
+                statusDiv.innerText = `Успешно: Реле ${command}`;
+                statusDiv.style.color = command === 'ON' ? '#2ecc71' : '#e74c3c';
+            } else {
+                statusDiv.innerText = 'Ошибка сервера';
+                statusDiv.style.color = 'orange';
+            }
+        } catch (error) {
+            console.error(error);
+            statusDiv.innerText = 'Ошибка соединения (проверьте CORS и порты)';
+            statusDiv.style.color = 'red';
+        }
+    }
+</script>
+
+</body>
+</html>
