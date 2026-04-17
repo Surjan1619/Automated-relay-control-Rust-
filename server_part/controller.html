@@ -26,29 +26,32 @@
 
 
 <script>
-    const SERVER_IP = 'http://172.31.28.185:3000';
+    // 1. Используем ВНЕШНИЙ IP (без порта 3000, так как работает Nginx на 80 порту)
+    const SERVER_IP = 'http://13.53.59.227';
 
     async function sendSignal(command) {
         const statusDiv = document.getElementById('status');
         statusDiv.innerText = `Отправка: ${command}...`;
 
         try {
-            const response = await fetch(`${SERVER_IP}/get-state`, {
+            // 2. Меняем путь на /send-text, как указано в вашем роуте
+            const response = await fetch(`${SERVER_IP}/send-text`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ state: command })
+                // 3. Отправляем как простой текст (Plain Text), чтобы Rust принял это в body: String
+                headers: { 'Content-Type': 'text/plain' },
+                body: command // Отправляет просто "ON" или "OFF"
             });
 
             if (response.ok) {
                 statusDiv.innerText = `Успешно: Реле ${command}`;
                 statusDiv.style.color = command === 'ON' ? '#2ecc71' : '#e74c3c';
             } else {
-                statusDiv.innerText = 'Ошибка сервера';
+                statusDiv.innerText = `Ошибка сервера: ${response.status}`;
                 statusDiv.style.color = 'orange';
             }
         } catch (error) {
             console.error(error);
-            statusDiv.innerText = 'Ошибка соединения (проверьте CORS и порты)';
+            statusDiv.innerText = 'Ошибка соединения. Проверьте Security Group в AWS (порт 80)';
             statusDiv.style.color = 'red';
         }
     }
